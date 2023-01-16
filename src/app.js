@@ -166,3 +166,18 @@ servidor.post("/status", async (require, response) => {
 		return response.sendStatus(500)
 	}
 })
+
+setInterval(() => {
+    const dbDosParticipantes3 = db.collection("participants").find().toArray()
+    dbDosParticipantes3.then((dbDosParticipantes3) => {
+        dbDosParticipantes3.forEach((parametro) => {
+            // Ver se o último status foi há mais de 10 segundos
+            if(Date.now() - parametro.lastStatus > 10000) {
+                db.collection("participants").deleteOne({ _id: ObjectId(parametro._id) })
+                const dbDasMensagens3 = { from: parametro.name, to: 'Todos', text: 'sai da sala...', type: 'status', time: dayjs(Date.now()).format('HH:mm:ss') }
+                db.collection("messages").insertOne(dbDasMensagens3)
+            }
+        })
+    })
+    // Atualizar a cada 15 segundos
+}, 15000)
