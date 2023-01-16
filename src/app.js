@@ -9,9 +9,9 @@ import dayjs from 'dayjs'
 
 // Variáveis globais
 const PORTA = 5000
-const app = express()
-app.use(express.json())
-app.use(cors())
+const servidor = express()
+servidor.use(express.json())
+servidor.use(cors())
 dotenv.config()
 const boolF = false
 const boolT = true
@@ -39,7 +39,7 @@ const padraoDasMensagens = joi.object({
 
 // Preciso fazer 3 posts e 2 gets
 // O primeiro post é para conseguir solicitar dados dos usuários do meu servidor
-app.post("/participants", async (require, response) => {
+servidor.post("/participants", async (require, response) => {
     const escopo = require.body
     const boolean = padraoDosUsuarios.validate(escopo, {abortEarly: boolF})
     if(boolean.error === true) {
@@ -68,6 +68,7 @@ app.post("/participants", async (require, response) => {
             to: "Todos",
             text: "entra na sala...",
             type: "status",
+            // O "format" serve para padronizar a forma como a hora vai ser vista
             time: dayjs(Date.now()).format('HH:mm:ss')
         }
         db.collection("participants").insertOne(padraoDosUsuarios2)
@@ -79,4 +80,9 @@ app.post("/participants", async (require, response) => {
     catch(err) {
         response.sendStatus(500)
     }    
+})
+
+servidor.get("/participants", async (require, response) => {
+	const dbDosParticipantes = await db.collection("participants").find().toArray()
+	return response.send(dbDosParticipantes)
 })
