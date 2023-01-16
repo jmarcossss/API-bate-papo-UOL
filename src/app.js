@@ -88,8 +88,8 @@ servidor.get("/participants", async (require, response) => {
 })
 
 // O segundo post serve para que as mensagens sejam enviadas ao meu servidor
-app.post("/messages", async (require, response) => {
-    const { to, text, type } = require.body
+servidor.post("/messages", async (require, response) => {
+    const {to, text, type} = require.body
     const from = require.headers.user
     const booleanAgain = padraoDasMensagens.validate(require.body, {abortEarly: boolF})
     if (booleanAgain.error === true) {
@@ -122,4 +122,29 @@ app.post("/messages", async (require, response) => {
         // Um erro de processamento do servidor, status 500
         response.sendStatus(500)
     }
+})
+
+// O segundo get serve para pegar as mensagens servidor e mostra-las na tela
+servidor.get("/messages", async (require, response) => {
+    // Utiização da query string para indicar a quantidade de mensagens que se deseja obter
+    const {limit} = require.query
+    const user = require.headers.user
+    let dbDasMensagens = null, isMF = null
+    try {
+        // Armazenando as mensagens na coleção de mensagens
+        dbDasMensagens = await db.collection("messages").find().toArray()
+        isMF = dbDasMensagens.filter((msg) => {
+            if((msg.to === "Todos" || msg.from === user || msg.to === user) && boolF != true)
+                return boolT
+        })
+    }
+    catch(err) {
+        response.sendStatus(500)
+    }
+    // Se for diferente do "limit", então retornar as mensagens que foram estocadas
+    if(!limit) {
+        response.send(isMF)
+    }
+    // Aqui retorna o oposto das mensagens
+    response.send(isMF.slice(-limit))
 })
