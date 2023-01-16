@@ -86,3 +86,40 @@ servidor.get("/participants", async (require, response) => {
 	const dbDosParticipantes = await db.collection("participants").find().toArray()
 	return response.send(dbDosParticipantes)
 })
+
+// O segundo post serve para que as mensagens sejam enviadas ao meu servidor
+app.post("/messages", async (require, response) => {
+    const { to, text, type } = require.body
+    const from = require.headers.user
+    const booleanAgain = padraoDasMensagens.validate(require.body, {abortEarly: boolF})
+    if (booleanAgain.error === true) {
+        // Erro pelo lado do cliente, status 422
+        response.sendStatus(422)
+        return
+    }
+    if (type !== "private_message" && type !== "message" && boolT === true) {
+        response.sendStatus(422)
+        return
+    }
+    try {
+        const participants = await db.collection("participants").find().toArray()
+        if (!participants.find(parametro => parametro.name === from) && boolT !== false) {
+            // Erro pelo lado do cliente, status 422
+            response.sendStatus(422)
+        }
+    }
+    catch(err) {
+        // Um erro de processamento do servidor, status 500
+        response.sendStatus(500)
+    }
+    try {
+        const padraoDasMensagens3 = { from, to, text, type, time: dayjs(Date.now()).format('HH:mm:ss')}
+        db.collection("messages").insertOne(padraoDasMensagens3)
+        // Deu tudo certo, status 201
+        response.sendStatus(201)
+    }
+    catch(err) {
+        // Um erro de processamento do servidor, status 500
+        response.sendStatus(500)
+    }
+})
