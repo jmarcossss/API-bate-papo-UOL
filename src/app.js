@@ -36,3 +36,47 @@ const padraoDasMensagens = joi.object({
     text: joi.string().min(1).max(100).required(),
     type: joi.string().min(1).max(100).required(),
 })
+
+// Preciso fazer 3 posts e 2 gets
+// O primeiro post é para conseguir solicitar dados dos usuários do meu servidor
+app.post("/participants", async (require, response) => {
+    const escopo = require.body
+    const boolean = padraoDosUsuarios.validate(escopo, {abortEarly: boolF})
+    if(boolean.error === true) {
+        // const errors = boolean.error.details.map(detail => detail.message)
+        response.sendStatus(422)
+        return
+    }
+    // Verificar se um usuário já foi inserido
+    try {
+        // O "await" é para await fazer a execução de uma função async pausar, para esperar pelo retorno da Promise
+        const participants = await db.collection("participants").find().toArray()
+        const found = participants.find(param => param.name === escopo.name)
+        if(found === true) {
+            // Participante já foi criado/existe, status 409
+            response.sendStatus(409)
+            return
+        }
+        // Padrão do formato dos usuários e das mensagens, novamente
+        // O Date serve para padronizar o horário que é solicitado
+        const padraoDosUsuarios2 = {
+            name: escopo.name,
+            lastStatus: Date.now()
+        }
+        const padraoDasMensagens2 = {
+            from: escopo.name,
+            to: "Todos",
+            text: "entra na sala...",
+            type: "status",
+            time: dayjs(Date.now()).format('HH:mm:ss')
+        }
+        db.collection("participants").insertOne(padraoDosUsuarios2)
+        db.collection("messages").insertOne(padraoDasMensagens2)
+        // Deu tudo certo, status 201
+        response.sendStatus(201)
+    }
+    // Em caso de erro de processamento do servidor, status 500 
+    catch(err) {
+        response.sendStatus(500)
+    }    
+})
