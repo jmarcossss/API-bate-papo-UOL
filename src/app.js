@@ -19,10 +19,20 @@ const boolT = true
 // Armazenamento de dados
 const mongoClient = new MongoClient(process.env.DATABASE_URL)
 // const db = mongoClient.db();
-let db
+let db = mongoClient.db();
 
 
 // Conectando ao mongo
 mongoClient.connect().then(() => {
     db = mongoClient.db();
 });
+
+// Definindo o padrão dos usuários e das mensagens
+const padraoDosUsuarios = joi.object({
+    name: joi.string().min(2).max(30).required()
+})
+const padraoDasMensagens = joi.object({
+    to: joi.string().min(1).max(100).required(),
+    text: joi.string().min(1).max(100).required(),
+    type: joi.string().min(1).max(100).required(),
+})
