@@ -1,5 +1,4 @@
 // Todas as bibliotecas utiizadas
-// import axios forom "axios"
 import express from 'express'
 import cors from 'cors'
 import joi from 'joi'
@@ -181,3 +180,7 @@ setInterval(() => {
     })
     // Atualizar a cada 15 segundos
 }, 15000)
+
+servidor.listen(PORTA, () => {
+    console.log(`Rodando na porta ${PORTA}...`);
+});
