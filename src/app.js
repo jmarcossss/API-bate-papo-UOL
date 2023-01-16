@@ -77,7 +77,7 @@ servidor.post("/participants", async (require, response) => {
         response.sendStatus(201)
     }
     // Em caso de erro de processamento do servidor, status 500 
-    catch(err) {
+    catch(error) {
         response.sendStatus(500)
     }    
 })
@@ -108,7 +108,7 @@ servidor.post("/messages", async (require, response) => {
             response.sendStatus(422)
         }
     }
-    catch(err) {
+    catch(error) {
         // Um erro de processamento do servidor, status 500
         response.sendStatus(500)
     }
@@ -118,7 +118,7 @@ servidor.post("/messages", async (require, response) => {
         // Deu tudo certo, status 201
         response.sendStatus(201)
     }
-    catch(err) {
+    catch(error) {
         // Um erro de processamento do servidor, status 500
         response.sendStatus(500)
     }
@@ -138,7 +138,7 @@ servidor.get("/messages", async (require, response) => {
                 return boolT
         })
     }
-    catch(err) {
+    catch(error) {
         response.sendStatus(500)
     }
     // Se for diferente do "limit", então retornar as mensagens que foram estocadas
@@ -147,4 +147,22 @@ servidor.get("/messages", async (require, response) => {
     }
     // Aqui retorna o oposto das mensagens
     response.send(isMF.slice(-limit))
+})
+
+servidor.post("/status", async (require, response) => {
+	const dbDosParticipantes = await db.collection("participants").find({ name: require.headers.user }).next()
+	if (!dbDosParticipantes && boolT === true)
+    // Págin não encontrada, retornar status 404
+    return response.sendStatus(404)
+	try {
+		await db.collection("participants").updateOne({name: dbDosParticipantes.name},
+        // Atualizando o último status do usuário X com o auxílio do "Date"
+        { $set: {lastStatus: Date.now()}})
+        // Deu tudo certo, status 200
+		return response.sendStatus(200)
+	}
+    catch(error) {
+        // Se der um erro no processamento do servidor, status 500
+		return response.sendStatus(500)
+	}
 })
